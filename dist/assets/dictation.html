@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tamil Dictation — Listening</title>
+    <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            text-align: center;
+            padding: 20px;
+            background: #ffffff;
+            color: #323130;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .pulse-ring {
+            width: 56px;
+            height: 56px;
+            background: #d13438;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 0 0 rgba(209, 52, 56, 0.7);
+            animation: pulse 1.5s infinite;
+            flex-shrink: 0;
+        }
+        .pulse-ring.idle {
+            background: #605e5c;
+            animation: none;
+            box-shadow: none;
+        }
+        @keyframes pulse {
+            0%   { box-shadow: 0 0 0 0 rgba(209, 52, 56, 0.7); }
+            70%  { box-shadow: 0 0 0 20px rgba(209, 52, 56, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(209, 52, 56, 0); }
+        }
+        .status {
+            font-size: 12px;
+            font-weight: 700;
+            color: #d13438;
+            margin-top: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status.idle { color: #605e5c; }
+        .lang-badge {
+            font-size: 10px;
+            color: #666;
+            background: #f3f2f1;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-top: 6px;
+            font-weight: 600;
+        }
+        .transcript {
+            font-size: 18px;
+            margin-top: 14px;
+            color: #201f1e;
+            line-height: 1.5;
+            max-width: 90%;
+            word-break: break-word;
+            min-height: 28px;
+        }
+        /* Error state */
+        .error-box {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 20px;
+        }
+        .error-box .error-icon {
+            width: 56px;
+            height: 56px;
+            background: #fde7e9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .error-box h3 { font-size: 15px; color: #a4262c; margin: 0; }
+        .error-box p  { font-size: 12px; color: #605e5c; line-height: 1.5; max-width: 85%; }
+        #main-ui { display: flex; flex-direction: column; align-items: center; }
+    </style>
+</head>
+<body>
+
+    <!-- Normal listening UI -->
+    <div id="main-ui">
+        <div class="pulse-ring" id="pulseRing">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            </svg>
+        </div>
+        <div class="status" id="statusText">Listening...</div>
+        <div class="lang-badge" id="langBadge">TAMIL MODE</div>
+        <div class="transcript" id="out">...</div>
+    </div>
+
+    <!-- Error UI (shown if Speech API is unavailable) -->
+    <div class="error-box" id="error-ui">
+        <div class="error-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="#a4262c">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+            </svg>
+        </div>
+        <h3>Microphone Not Available</h3>
+        <p>
+            Speech recognition could not start. Please ensure microphone permission is granted
+            and your Office version supports WebView2. You may need to close and reopen the dialog.
+        </p>
+    </div>
+
+    <script>
+        // ────────────────────────────────────────────────
+        // Utility: clean spurious Tamil consonant stubs
+        // ────────────────────────────────────────────────
+        function clean(t) {
+            return t
+                .replace(/(^|\s)[ப்ஃ](\s|$)/g, '$1$2')
+                .replace(/^[ப்ஃ]/, '')
+                .trim();
+        }
+
+        function showError() {
+            document.getElementById('main-ui').style.display = 'none';
+            var errBox = document.getElementById('error-ui');
+            errBox.style.display = 'flex';
+        }
+
+        function setStatus(text, isIdle) {
+            var el = document.getElementById('statusText');
+            var ring = document.getElementById('pulseRing');
+            el.textContent = text;
+            if (isIdle) {
+                el.className = 'status idle';
+                ring.className = 'pulse-ring idle';
+            } else {
+                el.className = 'status';
+                ring.className = 'pulse-ring';
+            }
+        }
+
+        // ────────────────────────────────────────────────
+        // Office bootstrap
+        // ────────────────────────────────────────────────
+        Office.onReady(function() {
+            var params = new URLSearchParams(window.location.search);
+            var listenLang = params.get('lang') || 'ta-IN';
+            var userFont   = params.get('font') || 'Latha';
+
+            // Set language badge
+            document.getElementById('langBadge').innerText =
+                listenLang === 'en-IN' ? 'ENGLISH MODE' : 'TAMIL MODE';
+
+            // Apply user font to live preview
+            document.getElementById('out').style.fontFamily = '"' + userFont + '", "Latha", sans-serif';
+
+            // ── Check for Speech API availability ──
+            var SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechAPI) {
+                showError();
+                return;
+            }
+
+            // ── Set up recognition ──
+            var rec = new SpeechAPI();
+            rec.continuous      = true;
+            rec.interimResults  = true;
+            rec.lang            = listenLang;
+            rec.maxAlternatives = 1;
+
+            // FIX #4: Use a flag to control restart behaviour.
+            // When a final result is processed and sent, we pause recognition
+            // briefly before restarting — preventing the infinite loop where
+            // rec.stop() → rec.onend → rec.start() → rec.stop() forever.
+            var shouldRestart = true;
+            var restartTimer  = null;
+
+            rec.onstart = function() {
+                setStatus('Listening...', false);
+            };
+
+            rec.onresult = function(e) {
+                var inter = '';
+                var final = '';
+                for (var i = e.resultIndex; i < e.results.length; i++) {
+                    var s = clean(e.results[i][0].transcript);
+                    if (e.results[i].isFinal) {
+                        final += s;
+                    } else {
+                        inter += s;
+                    }
+                }
+
+                document.getElementById('out').innerText = final || inter || '...';
+
+                if (final) {
+                    // Send the final result to the taskpane
+                    Office.context.ui.messageParent(JSON.stringify({ text: final, isFinal: true }));
+
+                    // Pause restart briefly to let the taskpane process the result,
+                    // then restart recognition for the next phrase.
+                    shouldRestart = false;
+                    setStatus('Processing...', true);
+                    rec.stop();
+
+                    restartTimer = setTimeout(function() {
+                        shouldRestart = true;
+                        document.getElementById('out').innerText = '...';
+                        try { rec.start(); } catch (startErr) { /* already started */ }
+                    }, 400);
+
+                } else if (inter) {
+                    // Send interim (live preview) result
+                    Office.context.ui.messageParent(JSON.stringify({ text: inter, isFinal: false }));
+                }
+            };
+
+            rec.onend = function() {
+                // Only restart if the flag says we should.
+                // This prevents the infinite loop when rec.stop() is called
+                // intentionally after a final result.
+                if (shouldRestart) {
+                    try { rec.start(); } catch (e) { /* ignore */ }
+                }
+            };
+
+            rec.onerror = function(event) {
+                // 'no-speech' and 'aborted' are normal; restart silently
+                if (event.error === 'no-speech' || event.error === 'aborted') return;
+
+                // 'not-allowed' means microphone permission was denied
+                if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                    showError();
+                    return;
+                }
+
+                // For other errors, pause and retry
+                shouldRestart = false;
+                setStatus('Error — retrying...', true);
+                clearTimeout(restartTimer);
+                restartTimer = setTimeout(function() {
+                    shouldRestart = true;
+                    try { rec.start(); } catch (e) { showError(); }
+                }, 1500);
+            };
+
+            // Start!
+            try {
+                rec.start();
+            } catch (e) {
+                showError();
+            }
+        });
+    </script>
+</body>
+</html>

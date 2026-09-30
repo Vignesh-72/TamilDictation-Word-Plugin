@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "allowUnusedLabels": false,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react",
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "noImplicitReturns": true,
+    "noUnusedParameters": false,
+    "outDir": "dist",
+    "removeComments": false,
+    "sourceMap": true,
+    "target": "ES2020",
+    "lib": [
+      "ES2020",
+      "dom"
+    ],
+    "pretty": true,
+    "typeRoots": [
+      "node_modules/@types"
+    ],
+    "types": [
+      "office-js",
+      "office-runtime",
+      "react",
+      "react-dom"
+    ]
+  },
+  "exclude": [
+    "node_modules"
+  ],
+  "compileOnSave": false,
+  "buildOnSave": false,
+  "ts-node": { 
+    "compilerOptions": {
+      "module": "commonjs"
+    },
+    "files": true 
+  }
+}

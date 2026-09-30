@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+           xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+           xsi:type="TaskPaneApp">
+
+  <Id>682a1143-2c7f-44df-b24b-ef0f64708778</Id>
+  <Version>1.0.0.2</Version>
+  <ProviderName>Vignesh</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="Tamil Dictation"/>
+  <Description DefaultValue="Professional Tamil Dictation and Translation Tool for Microsoft Word."/>
+
+  <!-- FIX #7: Use correctly sized PNG icon files (AppSource requires PNG, not JPG) -->
+  <IconUrl DefaultValue="https://tamil-dictation.netlify.app/assets/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://tamil-dictation.netlify.app/assets/icon-128.png"/>
+  <SupportUrl DefaultValue="https://tamil-dictation.netlify.app/help"/>
+
+  <AppDomains>
+    <AppDomain>https://tamil-dictation.netlify.app</AppDomain>
+  </AppDomains>
+
+  <Hosts>
+    <Host Name="Document"/>
+  </Hosts>
+
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://tamil-dictation.netlify.app/taskpane.html"/>
+  </DefaultSettings>
+
+  <Permissions>ReadWriteDocument</Permissions>
+
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Document">
+        <DesktopFormFactor>
+          <GetStarted>
+            <Title resid="GetStarted.Title"/>
+            <Description resid="GetStarted.Description"/>
+            <LearnMoreUrl resid="GetStarted.LearnMoreUrl"/>
+          </GetStarted>
+          <FunctionFile resid="Commands.Url"/>
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <OfficeTab id="TabHome">
+              <Group id="CommandsGroup">
+                <Label resid="CommandsGroup.Label"/>
+                <Icon>
+                  <!-- FIX #7: Separate correctly-sized PNG icons for each slot -->
+                  <bt:Image size="16" resid="Icon.16x16"/>
+                  <bt:Image size="32" resid="Icon.32x32"/>
+                  <bt:Image size="80" resid="Icon.80x80"/>
+                </Icon>
+                <Control xsi:type="Button" id="TaskpaneButton">
+                  <Label resid="TaskpaneButton.Label"/>
+                  <Supertip>
+                    <Title resid="TaskpaneButton.Label"/>
+                    <Description resid="TaskpaneButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16"/>
+                    <bt:Image size="32" resid="Icon.32x32"/>
+                    <bt:Image size="80" resid="Icon.80x80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>ButtonId1</TaskpaneId>
+                    <SourceLocation resid="Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+    <Resources>
+      <bt:Images>
+        <!-- FIX #7: Each icon references its correct PNG at the right size -->
+        <bt:Image id="Icon.16x16" DefaultValue="https://tamil-dictation.netlify.app/assets/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://tamil-dictation.netlify.app/assets/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://tamil-dictation.netlify.app/assets/icon-80.png"/>
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://tamil-dictation.netlify.app/help"/>
+        <bt:Url id="Commands.Url"            DefaultValue="https://tamil-dictation.netlify.app/commands.html"/>
+        <bt:Url id="Taskpane.Url"            DefaultValue="https://tamil-dictation.netlify.app/taskpane.html"/>
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="GetStarted.Title"       DefaultValue="Tamil Dictation is Ready!"/>
+        <bt:String id="CommandsGroup.Label"    DefaultValue="Dictation"/>
+        <bt:String id="TaskpaneButton.Label"   DefaultValue="Tamil Dictation"/>
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="GetStarted.Description" DefaultValue="Go to the HOME tab and click 'Tamil Dictation' to begin dictating in Tamil or English."/>
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Open the Tamil Dictation panel to start voice-to-text dictation."/>
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>
